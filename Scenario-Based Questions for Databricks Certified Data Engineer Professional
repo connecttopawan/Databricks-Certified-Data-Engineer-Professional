@@ -1,0 +1,617 @@
+1. **Scenario**: Your organization receives streaming data from an IoT platform via Apache Kafka, with nested JSON payloads containing sensor readings. The data must be ingested into a Delta Lake table for real-time analytics, but the schema evolves frequently. How would you design a robust ingestion pipeline?
+
+   **Answer**: Use Structured Streaming with schema inference and `mergeSchema`, then write to a Delta table with `autoMerge` enabled.
+
+   **Explanation**: Use `spark.readStream.format("kafka")` to ingest data, with `option("mergeSchema", true)` to handle schema evolution. Parse nested JSON using `from_json` with a dynamically inferred schema. Write to a Delta table using `writeStream.format("delta")` with `delta.schema.autoMerge=true` to accommodate schema changes. Use checkpointing to ensure fault tolerance.
+
+2. **Scenario**: You need to ingest 50 TB of historical Parquet files from an S3 bucket into a Delta Lake table. The files are partitioned inconsistently, and some contain corrupt data. How would you handle this?
+
+   **Answer**: Use `spark.read.option("mergeSchema", true)` with `corruptRecordPath`, repartition the data, and convert to Delta format.
+
+   **Explanation**: Read Parquet files with `mergeSchema` to unify schemas. Set `corruptRecordPath` to isolate corrupt records. Repartition the data using `repartition()` or `partitionBy` on a logical key (e.g., date) to optimize performance. Save as a Delta table using `write.format("delta")` for ACID transactions and time travel.
+
+3. **Scenario**: A pipeline ingests data from a PostgreSQL database via JDBC, but the source table has 100 million rows and frequent updates. How would you optimize incremental ingestion?
+
+   **Answer**: Use a watermark column, parallelize reads with `partitionColumn`, and implement a Delta `merge`.
+
+   **Explanation**: Identify a monotonically increasing column (e.g., `last_updated`) for incremental reads. Use JDBC options like `partitionColumn`, `lowerBound`, `upperBound`, and `numPartitions` to parallelize reads. Merge incremental data into a Delta table using `merge` to handle updates and inserts efficiently.
+
+4. **Scenario**: You are tasked with ingesting data from a REST API that paginates results and occasionally returns rate-limit errors. How would you build a resilient ingestion pipeline?
+
+   **Answer**: Use a Python script with retry logic in a Databricks notebook, store results in a temporary Delta table, and merge into the final table.
+
+   **Explanation**: Write a Python script using `requests` with exponential backoff for rate-limit errors. Store API results in a temporary Delta table. Use a `merge` operation to upsert data into the final Delta table, ensuring idempotency. Schedule the pipeline using Databricks Workflows.
+
+5. **Scenario**: Your team needs to ingest data from multiple cloud storage systems (S3, ADLS Gen2, GCS) into a single Delta Lake table. How would you ensure consistency and performance?
+
+   **Answer**: Use Unity Catalog for unified access and optimize reads with caching and partitioning.
+
+   **Explanation**: Configure Unity Catalog to manage credentials and access across cloud storage. Read data using `spark.read` with appropriate formats (`parquet`, `csv`). Cache frequently accessed data with `cache()` and partition the Delta table by a common key to optimize query performance.
+
+6. **Scenario**: A streaming pipeline processes JSON data from an Event Hub, but some messages are malformed. How would you handle errors without stopping the pipeline?
+
+   **Answer**: Use `badRecordsPath` and implement error logging within the streaming query.
+
+   **Explanation**: Configure `spark.readStream.option("badRecordsPath", "/path/to/bad_records")` to divert malformed records. Log errors using a custom `foreach` sink or write to a separate Delta table for analysis. Ensure the streaming query continues processing valid data.
+
+7. **Scenario**: You need to ingest data from a legacy system exporting fixed-width files. How would you process these in Databricks?
+
+   **Answer**: Use a Python UDF to parse fixed-width fields and save to a Delta table.
+
+   **Explanation**: Read the files as text using `spark.read.text()`. Define a UDF to parse fixed-width fields based on predefined column widths. Transform the data into a structured DataFrame and write to a Delta table for downstream processing.
+
+8. **Scenario**: A pipeline ingests data from a MongoDB collection with complex nested documents. How would you flatten and store it in Delta Lake?
+
+   **Answer**: Use the MongoDB Spark Connector and `explode` to flatten nested structures.
+
+   **Explanation**: Use `spark.read.format("mongo")` to read from MongoDB. Flatten nested arrays and structs using `explode` and dot notation (e.g., `struct.field`). Write the flattened data to a Delta table, partitioning by a key column for performance.
+
+9. **Scenario**: Your organization needs to ingest sensitive healthcare data from a secure SFTP server. How would you securely process this in Databricks?
+
+   **Answer**: Use Databricks File System (DBFS) with SFTP integration and encrypt data at rest.
+
+   **Explanation**: Mount the SFTP server to DBFS using a secure connection. Read files using `spark.read` and apply transformations. Write to a Delta table with encryption enabled via customer-managed keys in the cloud provider’s key management service.
+
+10. **Scenario**: A pipeline ingests data from a Kinesis stream with variable throughput. How would you handle bursts in data volume?
+
+    **Answer**: Use auto-scaling clusters and tune `maxRecordsPerFetch`.
+
+    **Explanation**: Configure a Databricks cluster with auto-scaling to handle variable loads. Set `kinesis.maxRecordsPerFetch` to control the number of records processed per micro-batch, balancing throughput and stability. Write to a Delta table for reliable storage.
+
+## Data Transformation and Processing
+
+11. **Scenario**: A Delta table contains billions of rows with duplicate entries due to a faulty upsert operation. How would you efficiently deduplicate it?
+
+    **Answer**: Use `row_number()` with partitioning and overwrite the table.
+
+    **Explanation**: Assign `row_number()` within partitions of duplicate keys (e.g., `partition by customer_id`). Filter rows where `row_number = 1` to keep one record per key. Overwrite the Delta table using `write.mode("overwrite")` to replace the data.
+
+12. **Scenario**: A complex transformation joins three large Delta tables, causing out-of-memory errors. How would you optimize it?
+
+    **Answer**: Broadcast smaller tables, repartition larger ones, and enable AQE.
+
+    **Explanation**: Use `broadcast()` for tables under 100 MB to reduce shuffle. Repartition larger tables on join keys using `repartition()` to balance data. Enable Adaptive Query Execution (`spark.sql.adaptive.enabled=true`) to optimize join strategies dynamically.
+
+13. **Scenario**: You need to compute a 30-day moving average on streaming data with late arrivals. How would you implement this?
+
+    **Answer**: Use Structured Streaming with windowing and watermarking.
+
+    **Explanation**: Define a window using `window(event_time, "30 days")` in `groupBy`. Apply `avg()` to compute the moving average. Use `withWatermark("event_time", "1 day")` to handle late data and limit state growth.
+
+14. **Scenario**: A transformation pipeline processes sensitive financial data and must mask credit card numbers. How would you implement this?
+
+    **Answer**: Use a UDF or `regexp_replace` to mask sensitive fields.
+
+    **Explanation**: Create a UDF to mask credit card numbers (e.g., replace all but the last 4 digits with asterisks). Alternatively, use `regexp_replace` to pattern-match and mask numbers. Apply the transformation before writing to a Delta table.
+
+15. **Scenario**: A job performs heavy aggregations on a Delta table, causing spills to disk. How would you optimize it?
+
+    **Answer**: Increase shuffle partitions, persist intermediates, and use AQE.
+
+    **Explanation**: Set `spark.sql.shuffle.partitions` to a higher value (e.g., 1000) to reduce partition size. Persist intermediate DataFrames with `persist(StorageLevel.MEMORY_AND_DISK)`. Enable AQE to optimize skew and memory usage.
+
+16. **Scenario**: A pipeline transforms data using a custom Python library, but performance is poor. How would you improve it?
+
+    **Answer**: Convert Python logic to Scala UDFs or use Pandas UDFs.
+
+    **Explanation**: Python UDFs are slower due to serialization. Rewrite critical logic in Scala for better performance, or use Pandas UDFs (`pandas_udf`) to leverage vectorized operations while retaining Python compatibility.
+
+17. **Scenario**: You need to join streaming data from Kafka with a static Delta table, but the join is slow. How would you optimize it?
+
+    **Answer**: Cache the static table and use broadcast joins.
+
+    **Explanation**: Cache the static Delta table using `cache()` to keep it in memory. Use `broadcast()` for the static table in the join to avoid shuffling streaming data, improving performance.
+
+18. **Scenario**: A transformation pipeline processes data with skewed keys, causing executor failures. How would you handle skew?
+
+    **Answer**: Use salting or skew hints to balance data distribution.
+
+    **Explanation**: Add a random “salt” column to the skewed key (e.g., `concat(key, rand())`) to distribute data evenly. Alternatively, use Spark’s skew hint (`/*+ SKEW */`) to optimize join plans for skewed data.
+
+19. **Scenario**: A pipeline aggregates data hourly but must handle late data arriving up to 2 hours late. How would you design it?
+
+    **Answer**: Use Structured Streaming with watermarking and tumbling windows.
+
+    **Explanation**: Define a tumbling window with `window(event_time, "1 hour")`. Set `withWatermark("event_time", "2 hours")` to allow late data processing. Write results to a Delta table for downstream use.
+
+20. **Scenario**: You need to enrich a Delta table with geospatial data using an external library. How would you integrate this?
+
+    **Answer**: Use a Python UDF with a geospatial library like GeoPandas.
+
+    **Explanation**: Install the geospatial library (e.g., GeoPandas) on the cluster. Create a UDF to apply geospatial transformations (e.g., distance calculations). Apply the UDF to the Delta table and write results back.
+
+## Data Orchestration and Workflow
+
+21. **Scenario**: A multi-stage ETL pipeline depends on external data sources with varying availability. How would you orchestrate it?
+
+    **Answer**: Use Databricks Workflows with conditional tasks and control tables.
+
+    **Explanation**: Create a workflow with tasks for each stage. Use a control table in Delta Lake to track data availability. Add conditional logic in the workflow to wait for data using `dbutils.notebook.run` or task dependencies.
+
+22. **Scenario**: A pipeline processes data in parallel across 10 regions, but some regions fail intermittently. How would you handle failures?
+
+    **Answer**: Implement retry logic and use Delta Lake for idempotent writes.
+
+    **Explanation**: Configure retries in Databricks Workflows with exponential backoff. Use Delta Lake’s `merge` to ensure idempotent writes, preventing duplicate data on retries. Log failures to a Delta table for analysis.
+
+23. **Scenario**: You need to orchestrate a pipeline that triggers only when a specific S3 bucket receives new files. How would you implement this?
+
+    **Answer**: Use Auto Loader with file notification and Databricks Workflows.
+
+    **Explanation**: Configure Auto Loader with `cloudFiles` format to detect new files in the S3 bucket. Trigger a Databricks Workflow when new files are detected, using file notification mode for efficiency.
+
+24. **Scenario**: A pipeline runs multiple notebooks, but some notebooks share common preprocessing logic. How would you modularize this?
+
+    **Answer**: Create a shared notebook or Python module and use `%run` or imports.
+
+    **Explanation**: Encapsulate preprocessing logic in a shared notebook and call it using `%run`. Alternatively, create a Python module, upload it to DBFS, and import it in notebooks for reusability.
+
+25. **Scenario**: A nightly batch job must process data only after upstream dependencies complete. How would you ensure this?
+
+    **Answer**: Use Databricks Workflows with task dependencies.
+
+    **Explanation**: Define tasks in a Databricks Workflow, specifying dependencies to ensure upstream tasks complete before downstream ones. Use `dbutils.notebook.exit` to signal task completion.
+
+26. **Scenario**: A pipeline processes sensitive data and requires audit logs for all operations. How would you implement this?
+
+    **Answer**: Use Unity Catalog audit logs and Delta table history.
+
+    **Explanation**: Enable audit logging in Unity Catalog to track user actions. Use `DESCRIBE HISTORY` on Delta tables to log data changes, including operation type and timestamp.
+
+27. **Scenario**: A pipeline runs across multiple Databricks workspaces in different regions. How would you coordinate it?
+
+    **Answer**: Use Unity Catalog for shared metadata and REST API for cross-workspace orchestration.
+
+    **Explanation**: Store data in a centralized Delta Lake managed by Unity Catalog. Use Databricks REST API to trigger jobs across workspaces, ensuring consistent orchestration.
+
+28. **Scenario**: A pipeline needs to process data in batches but must pause if a downstream system is unavailable. How would you handle this?
+
+    **Answer**: Implement a health check and use conditional logic in Workflows.
+
+    **Explanation**: Create a task to check downstream system availability (e.g., via API call). Use Databricks Workflows to pause the pipeline if the check fails, resuming when the system is available.
+
+29. **Scenario**: A pipeline must process data in a specific order across multiple tasks. How would you enforce this?
+
+    **Answer**: Use task dependencies in Databricks Workflows.
+
+    **Explanation**: Define tasks in a workflow with explicit dependencies to enforce execution order. Use `dbutils.notebook.run` for sequential notebook execution within tasks.
+
+30. **Scenario**: A pipeline processes data incrementally but must handle backfills for historical data. How would you design it?
+
+    **Answer**: Use parameterized notebooks and Delta Lake for backfills.
+
+    **Explanation**: Create a parameterized notebook to process data for a given date range. Use Databricks Workflows to trigger backfills, passing date parameters. Merge results into a Delta table to maintain consistency.
+
+## Performance Optimization
+
+31. **Scenario**: A Delta table with 1 billion rows is slow to query due to small file sizes. How would you optimize it?
+
+    **Answer**: Run `OPTIMIZE` and apply Z-Order indexing.
+
+    **Explanation**: Use `OPTIMIZE` to compact small files into larger ones, reducing metadata overhead. Apply `ZORDER BY` on frequently queried columns to enable data skipping and improve query performance.
+
+32. **Scenario**: A Spark job joins two large Delta tables, causing excessive shuffling. How would you reduce shuffle?
+
+    **Answer**: Co-partition tables on join keys and use broadcast joins for smaller tables.
+
+    **Explanation**: Partition both tables on the join key using `partitionBy` during writes. Use `broadcast()` for smaller tables to avoid shuffling their data. Verify the query plan with `EXPLAIN`.
+
+33. **Scenario**: A streaming job lags due to high input rates from Kafka. How would you scale it?
+
+    **Answer**: Scale the cluster, tune `maxOffsetsPerTrigger`, and use Delta Lake.
+
+    **Explanation**: Enable auto-scaling on the cluster to handle increased load. Set `maxOffsetsPerTrigger` to limit records per micro-batch. Use Delta Lake for efficient writes and checkpointing to ensure reliability.
+
+34. **Scenario**: A job suffers from disk spills during large aggregations. How would you mitigate this?
+
+    **Answer**: Increase memory, adjust shuffle partitions, and persist intermediates.
+
+    **Explanation**: Use larger instance types with more memory. Increase `spark.sql.shuffle.partitions` to reduce partition size. Persist intermediate DataFrames with `persist(StorageLevel.MEMORY_AND_DISK)` to minimize spills.
+
+35. **Scenario**: A query on a partitioned Delta table is slow despite partitioning. How would you diagnose and fix it?
+
+    **Answer**: Analyze the query plan and apply Z-Order indexing.
+
+    **Explanation**: Use `EXPLAIN` to check for partition pruning. If pruning is ineffective, ensure partitions align with query filters. Apply `ZORDER BY` on filter columns to improve data skipping.
+
+36. **Scenario**: A streaming pipeline processes data with variable latency, causing backpressure. How would you address this?
+
+    **Answer**: Tune `trigger` and `maxOffsetsPerTrigger`, and scale the cluster.
+
+    **Explanation**: Set a `trigger` interval (e.g., `Trigger.ProcessingTime("10 seconds")`) to control micro-batch frequency. Adjust `maxOffsetsPerTrigger` to limit data per batch. Enable auto-scaling to handle peak loads.
+
+37. **Scenario**: A job processes a skewed dataset, causing some executors to fail. How would you handle skew?
+
+    **Answer**: Use salting or AQE skew handling.
+
+    **Explanation**: Add a random “salt” column to the skewed key to distribute data evenly. Enable AQE (`spark.sql.adaptive.enabled=true`) to dynamically handle skew during joins and aggregations.
+
+38. **Scenario**: A pipeline processes a large dataset but only needs recent data for most queries. How would you optimize storage?
+
+    **Answer**: Partition by date and use `VACUUM` to remove old data.
+
+    **Explanation**: Partition the Delta table by date to optimize queries on recent data. Run `VACUUM` with a retention period (e.g., 30 days) to delete old files, reducing storage costs.
+
+39. **Scenario**: A job is slow due to excessive garbage collection. How would you optimize it?
+
+    **Answer**: Tune JVM options and persist DataFrames.
+
+    **Explanation**: Adjust JVM settings (e.g., `spark.executor.memoryOverhead`) to allocate more off-heap memory. Persist frequently accessed DataFrames to reduce object creation and garbage collection overhead.
+
+40. **Scenario**: A pipeline processes data across multiple cloud regions, causing high latency. How would you optimize it?
+
+    **Answer**: Co-locate compute and storage, and use Delta caching.
+
+    **Explanation**: Deploy clusters in the same region as the data storage to reduce latency. Use Delta caching (`CACHE TABLE`) for frequently accessed tables to minimize cross-region reads.
+
+## Security and Governance
+
+41. **Scenario**: Your organization requires fine-grained access control for Delta tables across multiple teams. How would you implement this?
+
+    **Answer**: Use Unity Catalog with table- and column-level permissions.
+
+    **Explanation**: Define roles in Unity Catalog and assign permissions (e.g., `SELECT`, `MODIFY`) to specific tables or columns. Use groups to manage team access, ensuring compliance with security policies.
+
+42. **Scenario**: A Delta table contains PII, and only authorized users should see unmasked data. How would you enforce this?
+
+    **Answer**: Use dynamic views with row- and column-level filtering.
+
+    **Explanation**: Create a view with a `CASE` statement or UDF to mask PII based on user roles (e.g., `current_user()`). Apply row-level filters to restrict access to sensitive rows, enforced by Unity Catalog.
+
+43. **Scenario**: You need to audit all data access and modifications for compliance. How would you set this up?
+
+    **Answer**: Enable Unity Catalog audit logs and use Delta table history.
+
+    **Explanation**: Configure audit logging in Unity Catalog to track access and modifications. Use `DESCRIBE HISTORY` on Delta tables to log changes, including user, operation, and timestamp.
+
+44. **Scenario**: A pipeline processes sensitive data and must comply with GDPR. How would you handle data deletion requests?
+
+    **Answer**: Use `DELETE` with row-level filtering and `VACUUM` to remove data permanently.
+
+    **Explanation**: Identify records to delete using a filter (e.g., `WHERE user_id = '123'`). Run `DELETE` to soft-delete records, then use `VACUUM` with `RETAIN 0 HOURS` to permanently remove them, ensuring GDPR compliance.
+
+45. **Scenario**: Your organization requires encryption for all Delta tables. How would you configure this?
+
+    **Answer**: Use Databricks’ default encryption and customer-managed keys.
+
+    **Explanation**: Databricks encrypts data at rest by default. Configure customer-managed keys in AWS KMS, Azure Key Vault, or GCP KMS for Delta tables. Ensure HTTPS is used for data in transit.
+
+46. **Scenario**: A pipeline processes data in a shared workspace, and you need to isolate team data. How would you achieve this?
+
+    **Answer**: Use Unity Catalog schemas and access controls.
+
+    **Explanation**: Create separate schemas for each team in Unity Catalog. Assign permissions to schemas and tables, ensuring teams can only access their own data.
+
+47. **Scenario**: You need to restrict access to a Delta table based on user location. How would you implement this?
+
+    **Answer**: Use Unity Catalog with conditional access policies.
+
+    **Explanation**: Store user location metadata in Unity Catalog. Create views with row-level filters based on location (e.g., `WHERE region = current_user_region()`). Enforce access via Unity Catalog permissions.
+
+48. **Scenario**: A pipeline must log all data access for regulatory reporting. How would you implement this?
+
+    **Answer**: Use Unity Catalog audit logs and write to a Delta table.
+
+    **Explanation**: Enable audit logging in Unity Catalog to capture access events. Write audit logs to a Delta table using a scheduled job for reporting and analysis.
+
+49. **Scenario**: Your organization requires data residency compliance, with data stored in specific regions. How would you ensure this?
+
+    **Answer**: Use regional Databricks workspaces and Unity Catalog.
+
+    **Explanation**: Deploy Databricks workspaces in compliant regions. Use Unity Catalog to manage data storage in region-specific cloud storage (e.g., S3 buckets) and enforce access controls.
+
+50. **Scenario**: A pipeline processes sensitive data and must prevent unauthorized modifications. How would you enforce this?
+
+    **Answer**: Use Unity Catalog with `MODIFY` permissions restricted to authorized roles.
+
+    **Explanation**: Assign `MODIFY` permissions only to specific roles in Unity Catalog. Use Delta Lake’s ACID transactions to ensure data integrity and prevent unauthorized writes.
+
+## Advanced Delta Lake Features
+
+51. **Scenario**: A streaming pipeline needs to upsert data into a Delta table while handling schema changes. How would you implement this?
+
+    **Answer**: Use `merge` in `foreachBatch` with `autoMerge` enabled.
+
+    **Explanation**: Use `foreachBatch` in Structured Streaming to apply a `merge` operation per micro-batch. Set `delta.schema.autoMerge=true` to handle schema evolution. Ensure checkpointing for fault tolerance.
+
+52. **Scenario**: A Delta table was corrupted after a failed write. How would you recover it?
+
+    **Answer**: Use `RESTORE` or time travel to revert to a valid version.
+
+    **Explanation**: Query `DESCRIBE HISTORY` to identify the last valid version. Use `RESTORE TABLE TO VERSION AS OF` or `TIMESTAMP AS OF` to revert the table, preserving data integrity.
+
+53. **Scenario**: You need to manage storage costs for a Delta table with frequent updates. How would you optimize it?
+
+    **Answer**: Use `VACUUM` and adjust retention policies.
+
+    **Explanation**: Run `VACUUM` to delete files older than the retention period (e.g., 7 days). Set `delta.logRetentionDuration` and `delta.deletedFileRetentionDuration` to balance storage costs and time travel needs.
+
+54. **Scenario**: A Delta table needs to be cloned for testing without copying data. How would you do this?
+
+    **Answer**: Use zero-copy cloning with `CLONE`.
+
+    **Explanation**: Use `CREATE TABLE new_table CLONE original_table` to create a zero-copy clone. The clone references the same data files but allows independent metadata changes, saving storage.
+
+55. **Scenario**: A Delta table is used for ML training, but queries are slow due to frequent updates. How would you optimize it?
+
+    **Answer**: Run `OPTIMIZE` and apply Z-Order indexing on ML-relevant columns.
+
+    **Explanation**: Use `OPTIMIZE` to compact files and reduce metadata overhead. Apply `ZORDER BY` on columns used in ML queries (e.g., feature columns) to improve data skipping.
+
+56. **Scenario**: You need to backfill a Delta table with historical data while maintaining consistency. How would you do this?
+
+    **Answer**: Use `merge` with parameterized notebooks for backfills.
+
+    **Explanation**: Create a notebook to process data for a specific date range. Use `merge` to upsert backfilled data into the Delta table, ensuring no duplicates. Schedule backfills with Databricks Workflows.
+
+57. **Scenario**: A Delta table needs to support concurrent writes from multiple pipelines. How would you ensure consistency?
+
+    **Answer**: Use Delta Lake’s optimistic concurrency control.
+
+    **Explanation**: Delta Lake’s ACID transactions handle concurrent writes using optimistic concurrency. Ensure unique keys for `merge` operations to avoid conflicts. Monitor `DESCRIBE HISTORY` for conflicts.
+
+58. **Scenario**: You need to migrate a Parquet table to Delta Lake with minimal downtime. How would you do this?
+
+    **Answer**: Use `CONVERT TO DELTA` and validate the schema.
+
+    **Explanation**: Run `CONVERT TO DELTA` on the Parquet table to convert it in-place. Validate the schema beforehand to ensure compatibility. Use `DESCRIBE HISTORY` to verify the conversion.
+
+59. **Scenario**: A Delta table has outdated statistics, causing slow queries. How would you update them?
+
+    **Answer**: Run `ANALYZE TABLE` to refresh statistics.
+
+    **Explanation**: Use `ANALYZE TABLE table_name COMPUTE STATISTICS` to update table statistics, improving query optimization. Combine with `OPTIMIZE` for best performance.
+
+60. **Scenario**: You need to partition a Delta table for better query performance. How would you choose the partition key?
+
+    **Answer**: Select a high-cardinality column aligned with query patterns.
+
+    **Explanation**: Choose a column with high cardinality (e.g., date, region) that matches common query filters. Avoid low-cardinality columns to prevent large partitions. Verify with `EXPLAIN` to ensure partition pruning.
+
+## Machine Learning Integration
+
+61. **Scenario**: A pipeline preprocesses a Delta table for ML training and must track experiments. How would you integrate with MLflow?
+
+    **Answer**: Use MLflow to log preprocessing steps and models.
+
+    **Explanation**: Preprocess the Delta table in a Databricks notebook. Use `mlflow.log_param` and `mlflow.log_artifact` to track preprocessing parameters and data versions. Log the trained model with `mlflow.<framework>.log_model`.
+
+62. **Scenario**: An ML model needs real-time features from a Delta table. How would you enable this?
+
+    **Answer**: Use Databricks Feature Store with Delta tables.
+
+    **Explanation**: Register the Delta table as a feature table in the Feature Store. Use the Feature Store API to serve features for real-time inference, ensuring consistency and scalability.
+
+63. **Scenario**: You need to version ML models and their associated Delta tables. How would you manage this?
+
+    **Answer**: Use MLflow for models and Delta Lake for table versioning.
+
+    **Explanation**: Log models in MLflow with `mlflow.log_model`, associating them with Delta table versions using `VERSION AS OF`. Track versions in MLflow runs for traceability.
+
+64. **Scenario**: A pipeline trains an ML model daily, but schema changes in the Delta table cause failures. How would you prevent this?
+
+    **Answer**: Enforce schema validation and use `autoMerge`.
+
+    **Explanation**: Define an explicit schema for the Delta table and validate it in the pipeline. Set `delta.schema.autoMerge=true` to handle schema evolution gracefully during writes.
+
+65. **Scenario**: You need to serve an ML model for batch inference on a large Delta table. How would you implement this?
+
+    **Answer**: Use MLflow with a Spark UDF for batch inference.
+
+    **Explanation**: Load the MLflow model as a Spark UDF using `mlflow.pyfunc.spark_udf`. Apply the UDF to the Delta table in a Spark job to generate predictions, writing results to a new Delta table.
+
+66. **Scenario**: An ML pipeline requires feature engineering on a Delta table with billions of rows. How would you optimize it?
+
+    **Answer**: Use Spark for distributed processing and cache intermediates.
+
+    **Explanation**: Perform feature engineering with PySpark or Spark SQL for scalability. Cache intermediate DataFrames with `cache()` to avoid recomputation. Partition the Delta table to optimize reads.
+
+67. **Scenario**: You need to monitor ML model performance on a Delta table over time. How would you implement this?
+
+    **Answer**: Use MLflow to log metrics and Delta Lake for data versioning.
+
+    **Explanation**: Log model performance metrics (e.g., accuracy) in MLflow after each run. Use Delta Lake’s time travel to compare predictions against historical data versions, ensuring consistency.
+
+68. **Scenario**: A pipeline trains multiple ML models on subsets of a Delta table. How would you manage data subsets?
+
+    **Answer**: Use views or filtered Delta tables for subsets.
+
+    **Explanation**: Create views or temporary Delta tables with filtered data (e.g., `WHERE region = 'US'`) for each model. Register these as feature tables in the Feature Store for consistency.
+
+69. **Scenario**: An ML model requires features from multiple Delta tables. How would you combine them efficiently?
+
+    **Answer**: Use the Feature Store to join features and optimize with Z-Order.
+
+    **Explanation**: Register features from each Delta table in the Feature Store. Use the Feature Store API to join features efficiently. Apply Z-Order indexing on join keys to optimize performance.
+
+70. **Scenario**: You need to deploy an ML model for online inference with low latency. How would you achieve this?
+
+    **Answer**: Use Databricks Model Serving with Feature Store integration.
+
+    **Explanation**: Register the model in MLflow and deploy it via Databricks Model Serving. Integrate with the Feature Store to fetch real-time features, ensuring low-latency inference.
+
+## Monitoring and Maintenance
+
+71. **Scenario**: A streaming job accumulates state, causing memory issues. How would you manage state?
+
+    **Answer**: Use watermarking and set state retention limits.
+
+    **Explanation**: Apply `withWatermark` to drop late data and limit state growth. Set `spark.sql.streaming.statefulOperator.stateRetentionDuration` to control state retention duration.
+
+72. **Scenario**: You need to monitor cluster performance for a pipeline running multiple jobs. How would you do this?
+
+    **Answer**: Use Databricks Cluster UI, Ganglia, and Spark metrics.
+
+    **Explanation**: Monitor CPU, memory, and disk usage in the Cluster UI. Use Ganglia for executor-level metrics and Spark’s web UI to analyze job performance and identify bottlenecks.
+
+73. **Scenario**: A job fails due to a Spark version mismatch after a runtime upgrade. How would you prevent this?
+
+    **Answer**: Pin the Databricks Runtime version and test in staging.
+
+    **Explanation**: Specify a fixed Databricks Runtime version in the cluster configuration. Test upgrades in a staging workspace to ensure compatibility before production deployment.
+
+74. **Scenario**: You need to track the lineage of a Delta table across multiple pipelines. How would you do this?
+
+    **Answer**: Use Unity Catalog’s lineage tracking.
+
+    **Explanation**: Unity Catalog provides lineage tracking for Delta tables, showing upstream and downstream dependencies. Query the lineage graph to understand data flow and dependencies.
+
+75. **Scenario**: A pipeline slows over time due to growing data volumes. How would you diagnose and optimize it?
+
+    **Answer**: Analyze query plans, optimize partitioning, and scale resources.
+
+    **Explanation**: Use `EXPLAIN` to identify bottlenecks like shuffles. Repartition data to balance workloads and apply Z-Order indexing. Scale the cluster with auto-scaling or larger instances.
+
+76. **Scenario**: A job fails due to insufficient disk space. How would you resolve and prevent this?
+
+    **Answer**: Increase disk size and monitor usage.
+
+    **Explanation**: Check disk usage in the Cluster UI and increase disk size in the cluster configuration. Enable auto-scaling to add nodes dynamically. Monitor disk usage with Ganglia.
+
+77. **Scenario**: A pipeline depends on a third-party library that fails intermittently. How would you ensure reliability?
+
+    **Answer**: Use a cluster init script to install the library consistently.
+
+    **Explanation**: Create an init script to install the library during cluster startup. Store the script in DBFS and configure the cluster to use it, ensuring consistent library versions.
+
+78. **Scenario**: You need to monitor data quality in a Delta table. How would you implement this?
+
+    **Answer**: Use Delta table constraints and custom quality checks.
+
+    **Explanation**: Define constraints (e.g., `NOT NULL`) on the Delta table. Create a notebook to run quality checks (e.g., null counts, value ranges) and log results to a Delta table.
+
+79. **Scenario**: A streaming job fails due to a Kafka topic becoming unavailable. How would you recover?
+
+    **Answer**: Use checkpointing and set `failOnDataLoss=false`.
+
+    **Explanation**: Checkpointing ensures the job resumes from the last processed offset. Set `spark.sql.streaming.kafka.failOnDataLoss=false` to skip unavailable topics and continue processing.
+
+80. **Scenario**: A pipeline generates logs that need to be analyzed for performance issues. How would you manage this?
+
+    **Answer**: Write logs to a Delta table and analyze with Spark SQL.
+
+    **Explanation**: Use a logging framework (e.g., Python’s `logging`) to write logs to a Delta table. Query the table with Spark SQL to analyze performance metrics and identify issues.
+
+## Error Handling and Recovery
+
+81. **Scenario**: A streaming job fails due to a temporary network issue. How would you ensure it resumes correctly?
+
+    **Answer**: Use checkpointing and retry logic.
+
+    **Explanation**: Configure checkpointing with `writeStream.checkpointLocation` to track progress. Implement retry logic in the job using try-catch blocks or workflow retries to handle transient errors.
+
+82. **Scenario**: A Delta table becomes inconsistent after a failed merge operation. How would you recover?
+
+    **Answer**: Revert to a previous version using time travel.
+
+    **Explanation**: Use `DESCRIBE HISTORY` to find the last consistent version. Run `RESTORE TABLE TO VERSION AS OF` to revert the table, then reapply the merge with corrected logic.
+
+83. **Scenario**: A job fails due to a null pointer exception in a UDF. How would you debug and fix it?
+
+    **Answer**: Add null checks and log errors in the UDF.
+
+    **Explanation**: Modify the UDF to handle null inputs explicitly (e.g., `if input is None`). Add logging to capture error details. Test the UDF on a small dataset to identify issues.
+
+84. **Scenario**: A pipeline fails due to a missing Python dependency. How would you resolve it?
+
+    **Answer**: Install the dependency via an init script or `%pip`.
+
+    **Explanation**: Use a cluster init script to install the dependency during startup. Alternatively, run `%pip install <library>` in a notebook and restart the cluster to apply changes.
+
+85. **Scenario**: A job fails due to out-of-memory errors during a large join. How would you handle this?
+
+    **Answer**: Broadcast smaller tables and increase memory.
+
+    **Explanation**: Use `broadcast()` for smaller tables to reduce shuffle. Increase executor memory with `spark.executor.memory` and enable AQE to optimize join plans dynamically.
+
+86. **Scenario**: A streaming job fails due to an invalid schema in incoming data. How would you handle this?
+
+    **Answer**: Use schema validation and divert invalid records.
+
+    **Explanation**: Define an explicit schema and use `spark.readStream.schema()`. Divert invalid records to `badRecordsPath` and log them to a Delta table for analysis.
+
+87. **Scenario**: A pipeline fails due to a race condition in concurrent writes. How would you prevent this?
+
+    **Answer**: Use Delta Lake’s optimistic concurrency control.
+
+    **Explanation**: Delta Lake handles concurrent writes with optimistic concurrency. Ensure unique keys in `merge` operations to avoid conflicts. Monitor `DESCRIBE HISTORY` for conflicts.
+
+88. **Scenario**: A job fails due to a timeout in a REST API call. How would you handle this?
+
+    **Answer**: Implement retry logic with exponential backoff.
+
+    **Explanation**: Use a library like `requests` with retry logic (e.g., `tenacity`) to handle timeouts. Configure exponential backoff to retry failed API calls gracefully.
+
+89. **Scenario**: A pipeline fails due to a corrupted Parquet file. How would you identify and fix it?
+
+    **Answer**: Use `corruptRecordPath` and reprocess valid data.
+
+    **Explanation**: Read the Parquet file with `spark.read.option("corruptRecordPath", "/path")` to isolate corrupt records. Identify and remove the corrupted file, then reprocess the valid data.
+
+90. **Scenario**: A job fails due to a Spark configuration issue. How would you diagnose it?
+
+    **Answer**: Check Spark logs and use the Spark UI.
+
+    **Explanation**: Review Spark logs in the Databricks Cluster UI for configuration errors. Use the Spark UI to analyze job stages and identify misconfigured settings (e.g., `spark.sql.shuffle.partitions`).
+
+## Scalability and Cost Optimization
+
+91. **Scenario**: A cluster is over-provisioned, leading to high costs. How would you optimize resource usage?
+
+    **Answer**: Enable auto-scaling and use spot instances.
+
+    **Explanation**: Configure auto-scaling to adjust cluster size based on workload. Use spot instances for non-critical jobs to reduce costs, with fallback to on-demand instances for reliability.
+
+92. **Scenario**: A job processes a large dataset but only needs a few columns. How would you optimize it?
+
+    **Answer**: Use column pruning and predicate pushdown.
+
+    **Explanation**: Select only required columns in the query to reduce data read. Apply filters early to leverage predicate pushdown, minimizing data scanned by Spark.
+
+93. **Scenario**: A nightly batch job incurs high compute costs. How would you reduce costs?
+
+    **Answer**: Use a job cluster with auto-termination and spot instances.
+
+    **Explanation**: Create a job-specific cluster that terminates after completion. Use spot instances and auto-scaling to minimize costs while maintaining performance.
+
+94. **Scenario**: A streaming job processes high-velocity data, causing high costs. How would you optimize it?
+
+    **Answer**: Tune micro-batch size and use Delta Lake.
+
+    **Explanation**: Adjust `maxOffsetsPerTrigger` to control micro-batch size. Use Delta Lake for efficient writes and checkpointing to reduce storage and compute costs.
+
+95. **Scenario**: A pipeline processes data across regions, incurring high data transfer costs. How would you minimize this?
+
+    **Answer**: Co-locate compute and storage in the same region.
+
+    **Explanation**: Deploy clusters in the same region as the data storage (e.g., S3, ADLS). Use Delta caching to minimize cross-region reads, reducing transfer costs.
+
+96. **Scenario**: A job processes a large dataset but queries only recent data. How would you optimize storage?
+
+    **Answer**: Partition by date and use `VACUUM`.
+
+    **Explanation**: Partition the Delta table by date to optimize recent data queries. Run `VACUUM` with a retention period to delete old files, reducing storage costs.
+
+97. **Scenario**: A pipeline uses excessive compute resources due to inefficient joins. How would you optimize it?
+
+    **Answer**: Use broadcast joins and co-partition tables.
+
+    **Explanation**: Broadcast smaller tables to avoid shuffling. Partition tables on join keys to enable co-located joins, reducing data movement and compute usage.
+
+98. **Scenario**: A job runs slowly due to small file sizes in a Delta table. How would you optimize it?
+
+    **Answer**: Run `OPTIMIZE` and enable auto-compaction.
+
+    **Explanation**: Use `OPTIMIZE` to compact small files. Enable auto-compaction (`delta.autoOptimize.optimizeWrite=true`) to maintain optimal file sizes during writes.
+
+99. **Scenario**: A pipeline processes data incrementally but requires occasional full refreshes. How would you manage this?
+
+    **Answer**: Use parameterized notebooks and Delta `overwrite`.
+
+    **Explanation**: Create a notebook with parameters for incremental or full processing. Use `write.mode("overwrite")` for full refreshes and `merge` for incremental updates, ensuring consistency.
+
+100. **Scenario**: A pipeline runs on a shared cluster, causing resource contention. How would you optimize resource allocation?
+
+     **Answer**: Use job-specific clusters and pool resources.
+
+     **Explanation**: Create dedicated job clusters to isolate workloads. Use instance pools to pre-warm nodes, reducing startup time and ensuring efficient resource allocation.
