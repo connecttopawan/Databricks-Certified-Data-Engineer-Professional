@@ -1,8 +1,16 @@
-1. **Scenario**: Your organization receives streaming data from an IoT platform via Apache Kafka, with nested JSON payloads containing sensor readings. The data must be ingested into a Delta Lake table for real-time analytics, but the schema evolves frequently. How would you design a robust ingestion pipeline?
+1. **Scenario**: Your organization receives streaming data from an IoT platform via Apache Kafka, with nested JSON 
+payloads containing sensor readings. The data must be ingested into a Delta Lake table for real-time analytics, but 
+the schema evolves frequently. How would you design a robust ingestion pipeline?
 
-   **Answer**: Use Structured Streaming with schema inference and `mergeSchema`, then write to a Delta table with `autoMerge` enabled.
+   **Answer**: Use Structured Streaming with schema inference and `mergeSchema`, then write to a Delta table with 
+`autoMerge` enabled.
 
-   **Explanation**: Use `spark.readStream.format("kafka")` to ingest data, with `option("mergeSchema", true)` to handle schema evolution. Parse nested JSON using `from_json` with a dynamically inferred schema. Write to a Delta table using `writeStream.format("delta")` with `delta.schema.autoMerge=true` to accommodate schema changes. Use checkpointing to ensure fault tolerance.
+   **Explanation**: Use `spark.readStream.format("kafka")` to ingest data, with `option("mergeSchema", true)` to 
+handle schema evolution. Parse nested JSON using `from_json` with a dynamically inferred schema. Write to a Delta 
+table using `writeStream.format("delta")` with `delta.schema.autoMerge=true` to accommodate schema changes. Use 
+checkpointing to ensure fault tolerance.
+
+
 
 2. **Scenario**: You need to ingest 50 TB of historical Parquet files from an S3 bucket into a Delta Lake table. The files are partitioned inconsistently, and some contain corrupt data. How would you handle this?
 
