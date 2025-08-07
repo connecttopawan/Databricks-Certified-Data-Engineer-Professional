@@ -12,11 +12,15 @@ checkpointing to ensure fault tolerance.
 
 
 
-2. **Scenario**: You need to ingest 50 TB of historical Parquet files from an S3 bucket into a Delta Lake table. The files are partitioned inconsistently, and some contain corrupt data. How would you handle this?
+2. **Scenario**: You need to ingest 50 TB of historical Parquet files from an S3 bucket into a Delta Lake table. The 
+files are partitioned inconsistently, and some contain corrupt data. How would you handle this?
 
-   **Answer**: Use `spark.read.option("mergeSchema", true)` with `corruptRecordPath`, repartition the data, and convert to Delta format.
+   **Answer**: Use `spark.read.option("mergeSchema", true)` with `corruptRecordPath`, repartition the data, and 
+convert to Delta format.
 
-   **Explanation**: Read Parquet files with `mergeSchema` to unify schemas. Set `corruptRecordPath` to isolate corrupt records. Repartition the data using `repartition()` or `partitionBy` on a logical key (e.g., date) to optimize performance. Save as a Delta table using `write.format("delta")` for ACID transactions and time travel.
+   **Explanation**: Read Parquet files with `mergeSchema` to unify schemas. Set `corruptRecordPath` to isolate 
+corrupt records. Repartition the data using `repartition()` or `partitionBy` on a logical key (e.g., date) to optimize
+performance. Save as a Delta table using `write.format("delta")` for ACID transactions and time travel.
 
 3. **Scenario**: A pipeline ingests data from a PostgreSQL database via JDBC, but the source table has 100 million rows and frequent updates. How would you optimize incremental ingestion?
 
