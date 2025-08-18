@@ -1,0 +1,649 @@
+## Question 1
+What is the primary purpose of data modeling in a data engineering context?
+
+**A.** To optimize data storage costs  
+**B.** To define the structure and relationships of data in a database  
+**C.** To automate data ingestion pipelines  
+**D.** To visualize data for business users  
+
+**Correct Answer:** B  
+**Explanation:** Data modeling involves defining the structure, relationships, and constraints of data within a database to ensure it meets business requirements and supports efficient querying and storage. It is not primarily about cost optimization (A), pipeline automation (C), or visualization (D).
+
+---
+
+## Question 2
+Which of the following is a characteristic of a **normalized** database schema?
+
+**A.** Redundant data is stored to improve query performance  
+**B.** Data is split into multiple tables to reduce redundancy  
+**C.** All tables are denormalized for faster reads  
+**D.** Complex joins are avoided by storing all data in a single table  
+
+**Correct Answer:** B  
+**Explanation:** Normalization organizes data into multiple tables to eliminate redundancy and ensure data integrity, reducing anomalies during insert, update, or delete operations. Options A, C, and D describe denormalized schemas.
+
+---
+
+## Question 3
+In a Databricks environment, why might you choose to denormalize a database schema?
+
+**A.** To enforce strict data integrity constraints  
+**B.** To improve query performance for analytical workloads  
+**C.** To reduce the number of joins required in transactional systems  
+**D.** To ensure compliance with GDPR regulations  
+
+**Correct Answer:** B  
+**Explanation:** Denormalization in a Databricks environment is often used to improve query performance for analytical workloads by reducing the need for complex joins and enabling faster reads, especially in big data scenarios.
+
+---
+
+## Question 4
+What is a key benefit of using a **star schema** in a data warehouse?
+
+**A.** It eliminates the need for fact tables  
+**B.** It simplifies queries by reducing the number of joins  
+**C.** It enforces strict normalization rules  
+**D.** It is optimized for transactional processing  
+
+**Correct Answer:** B  
+**Explanation:** A star schema consists of a central fact table surrounded by dimension tables, simplifying queries by reducing the number of joins compared to a normalized schema. It is designed for analytical processing, not transactional systems (D).
+
+---
+
+## Question 5
+In a **snowflake schema**, how do dimension tables differ from those in a star schema?
+
+**A.** They are fully denormalized  
+**B.** They are normalized into multiple related tables  
+**C.** They contain measures instead of attributes  
+**D.** They are stored in a separate database  
+
+**Correct Answer:** B  
+**Explanation:** In a snowflake schema, dimension tables are normalized into multiple related tables, creating a more complex structure than the denormalized dimension tables in a star schema.
+
+---
+
+## Question 6
+Which Delta Lake feature supports schema evolution in a data model?
+
+**A.** Time Travel  
+**B.** Schema Enforcement  
+**C.** Schema Evolution  
+**D.** Z-Ordering  
+
+**Correct Answer:** C  
+**Explanation:** Delta Lake's schema evolution feature allows you to modify a table's schema (e.g., adding new columns) without breaking existing data pipelines, making it ideal for evolving data models in a lakehouse.
+
+---
+
+## Question 7
+When designing a data model for a Databricks lakehouse, what is a key consideration?
+
+**A.** Ensuring all data is stored in a single table  
+**B.** Balancing query performance with storage efficiency  
+**C.** Avoiding partitioning to simplify management  
+**D.** Using only relational databases for storage  
+
+**Correct Answer:** B  
+**Explanation:** In a Databricks lakehouse, data modeling requires balancing query performance (e.g., through partitioning or denormalization) with storage efficiency to optimize costs and scalability.
+
+---
+
+## Question 8
+What is the purpose of a **fact table** in a star schema?
+
+**A.** To store descriptive attributes about business entities  
+**B.** To store quantitative metrics or measures  
+**C.** To define relationships between dimension tables  
+**D.** To enforce referential integrity constraints  
+
+**Correct Answer:** B  
+**Explanation:** A fact table in a star schema contains quantitative metrics or measures (e.g., sales amounts, counts) and foreign keys linking to dimension tables, which store descriptive attributes (A).
+
+---
+
+## Question 9
+Which of the following is a disadvantage of a highly normalized schema in a Databricks environment?
+
+**A.** Increased storage requirements  
+**B.** Slower query performance due to multiple joins  
+**C.** Inability to support schema evolution  
+**D.** Lack of support for Delta Lake features  
+
+**Correct Answer:** B  
+**Explanation:** Highly normalized schemas require multiple joins, which can slow query performance in analytical workloads, especially in big data environments like Databricks.
+
+---
+
+## Question 10
+What is a **surrogate key** in data modeling?
+
+**A.** A natural key derived from business data  
+**B.** A unique, system-generated identifier for a record  
+**C.** A foreign key linking two fact tables  
+**D.** A composite key combining multiple attributes  
+
+**Correct Answer:** B  
+**Explanation:** A surrogate key is a unique, system-generated identifier (e.g., an auto-incrementing ID) used to uniquely identify records in a table, independent of business data.
+
+---
+
+## Question 11
+In Databricks, how can **partitioning** a Delta table improve query performance?
+
+**A.** By reducing the number of rows scanned during queries  
+**B.** By enforcing schema constraints  
+**C.** By automatically indexing all columns  
+**D.** By eliminating the need for joins  
+
+**Correct Answer:** A  
+**Explanation:** Partitioning a Delta table organizes data into subsets based on column values, reducing the number of rows scanned during queries and improving performance.
+
+---
+
+## Question 12
+Which of the following is true about **denormalization** in a data warehouse?
+
+**A.** It increases data redundancy to improve read performance  
+**B.** It reduces the number of tables to enforce normalization  
+**C.** It is primarily used for transactional systems  
+**D.** It eliminates the need for dimension tables  
+
+**Correct Answer:** A  
+**Explanation:** Denormalization intentionally introduces data redundancy to reduce joins and improve read performance, which is common in data warehouses for analytical queries.
+
+---
+
+## Question 13
+What is the role of a **dimension table** in a star schema?
+
+**A.** To store quantitative measures  
+**B.** To store descriptive attributes about business entities  
+**C.** To link multiple fact tables together  
+**D.** To enforce data integrity constraints  
+
+**Correct Answer:** B  
+**Explanation:** Dimension tables in a star schema store descriptive attributes (e.g., product names, customer details) that provide context to the measures in fact tables.
+
+---
+
+## Question 14
+When would you use a **snowflake schema** over a star schema in a Databricks data warehouse?
+
+**A.** When query simplicity is the primary goal  
+**B.** When storage efficiency and data normalization are priorities  
+**C.** When real-time transactional processing is required  
+**D.** When all data must be stored in a single table  
+
+**Correct Answer:** B  
+**Explanation:** A snowflake schema normalizes dimension tables, reducing redundancy and improving storage efficiency, but it increases query complexity compared to a star schema.
+
+---
+
+## Question 15
+Which Delta Lake feature ensures that a table's schema remains consistent during writes?
+
+**A.** Time Travel  
+**B.** Schema Enforcement  
+**C.** Z-Ordering  
+**D.** Delta Sharing  
+
+**Correct Answer:** B  
+**Explanation:** Schema Enforcement in Delta Lake ensures that data written to a table conforms to the defined schema, preventing inconsistencies.
+
+---
+
+## Question 16
+What is a **composite key** in data modeling?
+
+**A.** A single column that uniquely identifies a record  
+**B.** A combination of two or more columns that uniquely identify a record  
+**C.** A foreign key linking to a dimension table  
+**D.** A system-generated key for indexing  
+
+**Correct Answer:** B  
+**Explanation:** A composite key is a combination of two or more columns that together uniquely identify a record in a table.
+
+---
+
+## Question 17
+In a Databricks lakehouse, why might you avoid over-normalizing a data model?
+
+**A.** To reduce storage costs  
+**B.** To improve query performance for analytical workloads  
+**C.** To simplify schema evolution  
+**D.** To enforce stricter data integrity  
+
+**Correct Answer:** B  
+**Explanation:** Over-normalization can lead to complex joins, which slow down analytical queries in a Databricks lakehouse, where performance is often prioritized.
+
+---
+
+## Question 18
+What is the purpose of **Z-Ordering** in a Delta Lake table?
+
+**A.** To enforce schema constraints  
+**B.** To optimize data layout for faster queries  
+**C.** To enable time travel queries  
+**D.** To partition data by date  
+
+**Correct Answer:** B  
+**Explanation:** Z-Ordering in Delta Lake organizes data to improve query performance by co-locating related data, reducing the amount of data scanned.
+
+---
+
+## Question 19
+Which of the following is a benefit of using a **star schema** in Databricks?
+
+**A.** Reduced storage requirements due to normalization  
+**B.** Simplified queries for business intelligence tools  
+**C.** Support for real-time transactional updates  
+**D.** Elimination of fact tables  
+
+**Correct Answer:** B  
+**Explanation:** A star schema simplifies queries for BI tools by reducing the number of joins and providing a clear structure for analytical queries.
+
+---
+
+## Question 20
+What is a key difference between a **data warehouse** and a **data lake** in terms of data modeling?
+
+**A.** Data warehouses use unstructured data, while data lakes use structured data  
+**B.** Data warehouses use schema-on-write, while data lakes use schema-on-read  
+**C.** Data lakes are optimized for transactional processing  
+**D.** Data warehouses cannot store historical data  
+
+**Correct Answer:** B  
+**Explanation:** Data warehouses enforce a schema-on-write approach, requiring a predefined schema, while data lakes use schema-on-read, allowing flexibility in schema definition during querying.
+
+---
+
+## Question 21
+In a Databricks environment, what is a potential downside of denormalization?
+
+**A.** Increased query complexity  
+**B.** Higher storage costs due to data redundancy  
+**C.** Slower write performance  
+**D.** Inability to support joins  
+
+**Correct Answer:** B  
+**Explanation:** Denormalization increases storage costs due to redundant data, but it improves read performance by reducing the need for joins.
+
+---
+
+## Question 22
+What is the purpose of a **foreign key** in a data model?
+
+**A.** To uniquely identify a record in a table  
+**B.** To establish a relationship between two tables  
+**C.** To store quantitative measures  
+**D.** To partition a table for performance  
+
+**Correct Answer:** B  
+**Explanation:** A foreign key is a column (or set of columns) in one table that references the primary key of another table, establishing a relationship between them.
+
+---
+
+## Question 23
+When designing a data model for a Delta Lake table, what is a benefit of using **partitioning**?
+
+**A.** It eliminates the need for indexing  
+**B.** It reduces the amount of data scanned during queries  
+**C.** It enforces schema evolution  
+**D.** It prevents data updates  
+
+**Correct Answer:** B  
+**Explanation:** Partitioning organizes data into subsets based on column values, reducing the amount of data scanned during queries and improving performance.
+
+---
+
+## Question 24
+Which of the following is true about a **snowflake schema**?
+
+**A.** It is less normalized than a star schema  
+**B.** It reduces storage requirements but increases query complexity  
+**C.** It is optimized for transactional processing  
+**D.** It eliminates the need for dimension tables  
+
+**Correct Answer:** B  
+**Explanation:** A snowflake schema normalizes dimension tables, reducing storage requirements but increasing query complexity due to additional joins.
+
+---
+
+## Question 25
+What is the purpose of **schema evolution** in Delta Lake?
+
+**A.** To enforce strict schema constraints  
+**B.** To allow changes to a table's schema without breaking pipelines  
+**C.** To optimize data storage costs  
+**D.** To enable real-time data ingestion  
+
+**Correct Answer:** B  
+**Explanation:** Schema evolution in Delta Lake allows you to modify a table's schema (e.g., adding columns) without disrupting existing data pipelines.
+
+---
+
+## Question 26
+Which of the following is a characteristic of a **fact table** in a star schema?
+
+**A.** It contains descriptive attributes  
+**B.** It contains foreign keys linking to dimension tables  
+**C.** It is fully normalized  
+**D.** It is used to store metadata  
+
+**Correct Answer:** B  
+**Explanation:** A fact table contains quantitative measures and foreign keys that link to dimension tables, which store descriptive attributes.
+
+---
+
+## Question 27
+Why might you choose to use a **star schema** in a Databricks data warehouse?
+
+**A.** To enforce strict normalization  
+**B.** To simplify analytical queries for BI tools  
+**C.** To support real-time transactional updates  
+**D.** To reduce the number of dimension tables  
+
+**Correct Answer:** B  
+**Explanation:** A star schema simplifies analytical queries for BI tools by reducing the number of joins and providing a clear structure.
+
+---
+
+## Question 28
+In a Databricks lakehouse, what is a benefit of using **Delta Lake** for data modeling?
+
+**A.** It eliminates the need for data modeling  
+**B.** It supports ACID transactions and schema enforcement  
+**C.** It prevents schema evolution  
+**D.** It requires all data to be normalized  
+
+**Correct Answer:** B  
+**Explanation:** Delta Lake supports ACID transactions, schema enforcement, and schema evolution, making it ideal for robust data modeling in a lakehouse.
+
+---
+
+## Question 29
+What is a **natural key** in data modeling?
+
+**A.** A system-generated unique identifier  
+**B.** A column or set of columns with business meaning that uniquely identifies a record  
+**C.** A foreign key linking to a fact table  
+**D.** A composite key used for indexing  
+
+**Correct Answer:** B  
+**Explanation:** A natural key is a column (or set of columns) with business meaning (e.g., a customer ID) that uniquely identifies a record, unlike a surrogate key (A).
+
+---
+
+## Question 30
+When might you use **denormalization** in a Databricks environment?
+
+**A.** To enforce strict data integrity  
+**B.** To improve query performance for large-scale analytics  
+**C.** To reduce the number of tables  
+**D.** To support real-time transactional processing  
+
+**Correct Answer:** B  
+**Explanation:** Denormalization is used in Databricks to improve query performance for large-scale analytical workloads by reducing joins and redundancy.
+
+---
+
+## Question 31
+What is the purpose of a **primary key** in a data model?
+
+**A.** To store descriptive attributes  
+**B.** To uniquely identify each record in a table  
+**C.** To link to a fact table  
+**D.** To partition data for performance  
+
+**Correct Answer:** B  
+**Explanation:** A primary key is a column (or set of columns) that uniquely identifies each record in a table, ensuring data integrity.
+
+---
+
+## Question 32
+In a star schema, what is the role of a **dimension table**?
+
+**A.** To store quantitative measures  
+**B.** To store descriptive attributes about business entities  
+**C.** To enforce schema constraints  
+**D.** To partition data for performance  
+
+**Correct Answer:** B  
+**Explanation:** Dimension tables store descriptive attributes (e.g., product names, customer details) that provide context to the measures in fact tables.
+
+---
+
+## Question 33
+What is a benefit of using **Z-Ordering** in a Delta Lake table?
+
+**A.** It enforces schema evolution  
+**B.** It improves query performance by optimizing data layout  
+**C.** It eliminates the need for partitioning  
+**D.** It supports real-time data ingestion  
+
+**Correct Answer:** B  
+**Explanation:** Z-Ordering optimizes the physical layout of data in a Delta Lake table, improving query performance by co-locating related data.
+
+---
+
+## Question 34
+Which of the following is true about a **data lakehouse** in Databricks?
+
+**A.** It only supports structured data  
+**B.** It combines the flexibility of a data lake with the structure of a data warehouse  
+**C.** It is optimized for transactional processing  
+**D.** It eliminates the need for data modeling  
+
+**Correct Answer:** B  
+**Explanation:** A data lakehouse in Databricks combines the flexibility of a data lake (schema-on-read) with the structure of a data warehouse (schema-on-write).
+
+---
+
+## Question 35
+What is a disadvantage of a **snowflake schema** in a Databricks data warehouse?
+
+**A.** Increased storage requirements  
+**B.** Increased query complexity due to additional joins  
+**C.** Inability to support analytical queries  
+**D.** Lack of support for Delta Lake  
+
+**Correct Answer:** B  
+**Explanation:** A snowflake schema increases query complexity due to the normalization of dimension tables, requiring more joins than a star schema.
+
+---
+
+## Question 36
+In Delta Lake, what does **schema enforcement** prevent?
+
+**A.** Adding new columns to a table  
+**B.** Writing data that violates the defined schema  
+**C.** Querying historical data  
+**D.** Partitioning a table  
+
+**Correct Answer:** B  
+**Explanation:** Schema enforcement in Delta Lake prevents writing data that does not conform to the table’s defined schema, ensuring data consistency.
+
+---
+
+## Question 37
+What is the purpose of **data modeling** in a Databricks lakehouse?
+
+**A.** To eliminate the need for ETL pipelines  
+**B.** To define the structure and relationships of data for efficient querying  
+**C.** To enforce real-time data ingestion  
+**D.** To reduce the need for data storage  
+
+**Correct Answer:** B  
+**Explanation:** Data modeling defines the structure and relationships of data to support efficient querying and analysis in a Databricks lakehouse.
+
+---
+
+## Question 38
+Which of the following is a benefit of using a **star schema** over a snowflake schema?
+
+**A.** Reduced storage requirements  
+**B.** Simplified queries with fewer joins  
+**C.** Support for transactional processing  
+**D.** Elimination of fact tables  
+
+**Correct Answer:** B  
+**Explanation:** A star schema simplifies queries by using denormalized dimension tables, requiring fewer joins than a snowflake schema.
+
+---
+
+## Question 39
+What is a **surrogate key** used for in a data warehouse?
+
+**A.** To store business-relevant data  
+**B.** To uniquely identify records without relying on business data  
+**C.** To link fact tables to other fact tables  
+**D.** To partition data for performance  
+
+**Correct Answer:** B  
+**Explanation:** A surrogate key is a system-generated identifier used to uniquely identify records, independent of business data, improving performance and stability.
+
+---
+
+## Question 40
+In a Databricks environment, what is a benefit of using **Delta Lake** for data modeling?
+
+**A.** It eliminates the need for schema design  
+**B.** It supports ACID transactions and schema evolution  
+**C.** It prevents data updates  
+**D.** It requires all data to be denormalized  
+
+**Correct Answer:** B  
+**Explanation:** Delta Lake supports ACID transactions, schema enforcement, and schema evolution, making it ideal for robust data modeling.
+
+---
+
+## Question 41
+What is the purpose of **partitioning** a Delta Lake table?
+
+**A.** To enforce schema constraints  
+**B.** To improve query performance by reducing data scanned  
+**C.** To eliminate the need for joins  
+**D.** To support real-time data ingestion  
+
+**Correct Answer:** B  
+**Explanation:** Partitioning organizes data into subsets, reducing the amount of data scanned during queries and improving performance.
+
+---
+
+## Question 42
+Which of the following is a characteristic of a **denormalized** schema?
+
+**A.** Reduced redundancy to improve storage efficiency  
+**B.** Increased redundancy to improve query performance  
+**C.** Strict enforcement of normalization rules  
+**D.** Elimination of dimension tables  
+
+**Correct Answer:** B  
+**Explanation:** Denormalization increases redundancy to reduce joins and improve query performance, especially for analytical workloads.
+
+---
+
+## Question 43
+What is a **foreign key** in a data model?
+
+**A.** A column that uniquely identifies a record  
+**B.** A column that references a primary key in another table  
+**C.** A system-generated identifier  
+**D.** A column used for partitioning  
+
+**Correct Answer:** B  
+**Explanation:** A foreign key is a column that references the primary key of another table, establishing a relationship between the tables.
+
+---
+
+## Question 44
+Why might you use a **snowflake schema** in a Databricks data warehouse?
+
+**A.** To simplify queries for BI tools  
+**B.** To reduce storage requirements through normalization  
+**C.** To support real-time transactional updates  
+**D.** To eliminate the need for fact tables  
+
+**Correct Answer:** B  
+**Explanation:** A snowflake schema normalizes dimension tables, reducing storage requirements but increasing query complexity due to additional joins.
+
+---
+
+## Question 45
+In Delta Lake, what does **schema evolution** allow you to do?
+
+**A.** Enforce strict schema constraints  
+**B.** Modify a table’s schema without breaking pipelines  
+**C.** Eliminate the need for partitioning  
+**D.** Support real-time data ingestion  
+
+**Correct Answer:** B  
+**Explanation:** Schema evolution allows you to modify a table’s schema (e.g., adding columns) without disrupting existing data pipelines.
+
+---
+
+## Question 46
+What is the role of a **fact table** in a star schema?
+
+**A.** To store descriptive attributes  
+**B.** To store quantitative measures and foreign keys  
+**C.** To enforce schema constraints  
+**D.** To partition data for performance  
+
+**Correct Answer:** B  
+**Explanation:** A fact table stores quantitative measures (e.g., sales amounts) and foreign keys linking to dimension tables.
+
+---
+
+## Question 47
+What is a benefit of using a **star schema** in a Databricks data warehouse?
+
+**A.** Reduced storage requirements  
+**B.** Simplified queries for analytical workloads  
+**C.** Support for transactional processing  
+**D.** Elimination of dimension tables  
+
+**Correct Answer:** B  
+**Explanation:** A star schema simplifies queries for analytical workloads by reducing the number of joins, making it ideal for BI tools.
+
+---
+
+## Question 48
+In a Databricks lakehouse, what is a key consideration when designing a data model?
+
+**A.** Avoiding partitioning to simplify management  
+**B.** Balancing query performance and storage efficiency  
+**C.** Using only normalized schemas  
+**D.** Eliminating the need for schema evolution  
+
+**Correct Answer:** B  
+**Explanation:** Data modeling in a Databricks lakehouse requires balancing query performance (e.g., through partitioning or denormalization) with storage efficiency.
+
+---
+
+## Question 49
+What is a **natural key** in a data model?
+
+**A.** A system-generated identifier  
+**B.** A column with business meaning that uniquely identifies a record  
+**C.** A foreign key linking to a fact table  
+**D.** A composite key used for indexing  
+
+**Correct Answer:** B  
+**Explanation:** A natural key is a column with business meaning (e.g., a customer ID) that uniquely identifies a record, unlike a surrogate key (A).
+
+---
+
+## Question 50
+Why might you use **Z-Ordering** in a Delta Lake table?
+
+**A.** To enforce schema constraints  
+**B.** To optimize data layout for faster queries  
+**C.** To eliminate the need for partitioning  
+**D.** To support real-time data ingestion  
+
+**Correct Answer:** B  
+**Explanation:** Z-Ordering optimizes the physical layout of data in a Delta Lake table, improving query performance by co-locating related data.
+
+---
