@@ -1,0 +1,701 @@
+## Question 1
+You are designing a Delta Lake table to store customer data with strict data quality requirements. The table must prevent the insertion of records with missing or invalid customer IDs. Which approach ensures this requirement is met?
+
+A. Use a CHECK constraint to enforce non-null customer IDs.  
+B. Set the configuration `delta.enforceSchema = true`.  
+C. Use a MERGE statement with a conditional insert.  
+D. Apply a schema inference mechanism during table creation.  
+E. Use a VACUUM operation to remove invalid records.
+
+**Answer**: A  
+**Explanation**: Delta Lake supports CHECK constraints to enforce data quality rules, such as ensuring customer IDs are non-null or valid. For example, you can define a constraint like `CHECK (customer_id IS NOT NULL AND customer_id > 0)`. Option B (`delta.enforceSchema`) ensures schema compliance but doesn’t enforce specific data quality rules. Option C (MERGE) is useful for upserts but not for enforcing constraints on insert. Option D (schema inference) may allow invalid data if not explicitly validated. Option E (VACUUM) removes deleted data but doesn’t prevent invalid insertions.
+
+---
+
+## Question 2
+A retail company uses Delta Lake to manage sales data. The data model requires a Slowly Changing Dimension (SCD) Type 2 table to track historical changes in product prices. Which steps are necessary to implement this using Delta Lake?
+
+A. Create a table with `start_date`, `end_date`, and `is_active` columns, and use MERGE to update records.  
+B. Use schema inference to automatically handle price changes.  
+C. Overwrite the table with each price update to maintain history.  
+D. Use a CHECK constraint to enforce unique product IDs.  
+E. Set `delta.deduplicate = true` to avoid duplicate price records.
+
+**Answer**: A  
+**Explanation**: SCD Type 2 requires maintaining historical records by adding columns like `start_date`, `end_date`, and `is_active` to track the validity of each record. A MERGE statement can be used to insert new records and update existing ones (e.g., setting `end_date` and `is_active` for outdated records). Option B (schema inference) doesn’t manage historical tracking. Option C (overwrite) would lose historical data. Option D (CHECK constraint) ensures uniqueness but doesn’t handle history. Option E (`delta.deduplicate`) is not a valid Delta Lake configuration.
+
+---
+
+## Question 3
+You are designing a data model for a healthcare application using Delta Lake. The model includes a patient table with highly nested JSON data. Only 30 of the 100 fields are currently used by downstream applications. What is the best approach for schema declaration?
+
+A. Manually define all 100 fields in the schema to ensure data quality.  
+B. Use schema inference to automatically detect all fields.  
+C. Define only the 30 used fields and ignore the rest.  
+D. Store the JSON as a single string column and parse it dynamically.  
+E. Use a Parquet footer to modify unused fields dynamically.
+
+**Answer**: A  
+**Explanation**: Manually defining all 100 fields ensures strict schema enforcement and data quality, which is critical for healthcare applications. This approach prevents unexpected schema changes and allows Delta Lake to optimize storage and queries. Option B (schema inference) may introduce errors if data changes unexpectedly. Option C ignores unused fields, risking future compatibility issues. Option D (storing as a string) loses the benefits of structured data. Option E (Parquet footer) is not a practical approach for schema management in Delta Lake.
+
+---
+
+## Question 4
+A Delta Lake table stores transaction data and must enforce uniqueness on the `transaction_id` column. Which approach ensures this requirement?
+
+A. Use a PRIMARY KEY constraint.  
+B. Apply a UNIQUE constraint on `transaction_id`.  
+C. Use a MERGE statement with a deduplication condition.  
+D. Set `delta.uniqueKeys = transaction_id`.  
+E. Use Z-ordering on `transaction_id`.
+
+**Answer**: B  
+**Explanation**: Delta Lake supports UNIQUE constraints to enforce uniqueness on columns like `transaction_id`. This ensures no duplicate values are inserted. Option A (PRIMARY KEY) is not supported in Delta Lake as of the current version. Option C (MERGE) can deduplicate during upserts but doesn’t enforce uniqueness on insert. Option D (`delta.uniqueKeys`) is not a valid configuration. Option E (Z-ordering) optimizes query performance but doesn’t enforce uniqueness.
+
+---
+
+## Question 5
+You are tasked with designing a data pipeline that processes streaming sensor data into a Delta Lake table. The table must support incremental updates and prevent duplicate sensor readings. Which approach is most effective?
+
+A. Use a full outer join to deduplicate data before writing.  
+B. Perform an insert-only MERGE with a matching condition on a unique key.  
+C. Set `delta.deduplicate = true` on the table.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch to remove duplicates.
+
+**Answer**: B  
+**Explanation**: An insert-only MERGE with a matching condition on a unique key (e.g., `sensor_id` and `timestamp`) ensures that only new, non-duplicate records are inserted into the Delta Lake table. This is efficient for streaming data and maintains data integrity. Option A (full outer join) is computationally expensive and not ideal for streaming. Option C (`delta.deduplicate`) is not a valid configuration. Option D (CHECK constraint) cannot enforce deduplication across records. Option E (overwrite) is not suitable for incremental updates.
+
+---
+
+## Question 6
+You are designing a data model for a retail company that requires lookup tables for product information. What are the trade-offs of using a normalized versus a denormalized data model in Delta Lake?
+
+A. Normalized models reduce storage but increase query complexity; denormalized models simplify queries but increase storage.  
+B. Normalized models improve query performance; denormalized models reduce data consistency.  
+C. Normalized models simplify schema evolution; denormalized models improve data quality.  
+D. Normalized models increase storage; denormalized models reduce query performance.  
+E. Normalized models are not supported in Delta Lake.
+
+**Answer**: A  
+**Explanation**: Normalized models store data in separate tables, reducing redundancy and storage but requiring joins that increase query complexity. Denormalized models combine data into a single table, simplifying queries but increasing storage due to data duplication. Option B is incorrect because normalized models typically slow query performance due to joins. Option C is incorrect as normalized models complicate schema evolution. Option D reverses the storage and performance trade-offs. Option E is false as Delta Lake supports both models.
+
+---
+
+## Question 7
+A Delta Lake table stores customer data with a composite key (`customer_id`, `region`). How can you enforce uniqueness on this composite key?
+
+A. Use a CHECK constraint on both columns.  
+B. Apply a UNIQUE constraint on (`customer_id`, `region`).  
+C. Use a MERGE statement to deduplicate records.  
+D. Set `delta.constraints.compositeKey = customer_id, region`.  
+E. Use Z-ordering on the composite key.
+
+**Answer**: B  
+**Explanation**: Delta Lake supports UNIQUE constraints on composite keys, such as (`customer_id`, `region`), to enforce uniqueness across multiple columns. Option A (CHECK constraint) is not designed for uniqueness enforcement. Option C (MERGE) can deduplicate but doesn’t enforce uniqueness on insert. Option D is not a valid Delta Lake configuration. Option E (Z-ordering) optimizes queries but doesn’t enforce uniqueness.
+
+---
+
+## Question 8
+You are implementing a data model for a financial application using Delta Lake. The model must support ACID transactions and handle concurrent updates from multiple users. Which feature ensures data consistency?
+
+A. Z-ordering  
+B. Delta Lake’s transaction log  
+C. Schema inference  
+D. Parquet file format  
+E. Auto Loader
+
+**Answer**: B  
+**Explanation**: Delta Lake’s transaction log ensures ACID compliance by recording all operations (inserts, updates, deletes) and managing concurrent updates through optimistic concurrency control. This guarantees data consistency in multi-user environments. Option A (Z-ordering) optimizes query performance. Option C (schema inference) doesn’t handle concurrency. Option D (Parquet) is a storage format, not a concurrency mechanism. Option E (Auto Loader) is for data ingestion, not consistency.
+
+---
+
+## Question 9
+You are designing a Delta Lake table to store time-series data with frequent queries on the `timestamp` column. How can you optimize query performance?
+
+A. Use a CHECK constraint on the `timestamp` column.  
+B. Partition the table by `timestamp`.  
+C. Set `delta.deduplicate = true`.  
+D. Use schema inference for the `timestamp` column.  
+E. Overwrite the table daily to maintain performance.
+
+**Answer**: B  
+**Explanation**: Partitioning the table by `timestamp` (e.g., by date or hour) reduces the amount of data scanned during queries, improving performance for time-series data. Option A (CHECK constraint) enforces data quality but doesn’t optimize queries. Option C (`delta.deduplicate`) is not a valid configuration. Option D (schema inference) doesn’t impact query performance. Option E (overwrite) disrupts incremental updates and doesn’t optimize queries.
+
+---
+
+## Question 10
+A Delta Lake table stores order data, and you need to implement an SCD Type 1 table to maintain only the latest order status. Which approach is most efficient?
+
+A. Use a MERGE statement to update or insert the latest status based on `order_id`.  
+B. Overwrite the table with each batch of order data.  
+C. Use a CHECK constraint to enforce the latest status.  
+D. Set `delta.overwriteSchema = true` for each update.  
+E. Use Z-ordering on `order_id` to maintain the latest status.
+
+**Answer**: A  
+**Explanation**: SCD Type 1 maintains only the latest record for each key (e.g., `order_id`). A MERGE statement efficiently updates existing records or inserts new ones based on the latest status. Option B (overwrite) is inefficient and loses historical data. Option C (CHECK constraint) doesn’t manage updates. Option D (`delta.overwriteSchema`) is for schema changes, not data updates. Option E (Z-ordering) optimizes queries but doesn’t maintain the latest status.
+
+---
+
+## Question 11
+You are designing a Delta Lake table for a streaming pipeline that processes IoT device data. The table must handle late-arriving data and deduplicate records based on `device_id` and `timestamp`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `device_id` and `timestamp`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `device_id` and `timestamp` handles late-arriving data and deduplicates records by updating or inserting only the latest record. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is not suitable for incremental streaming updates.
+
+---
+
+## Question 12
+A Delta Lake table stores customer data with frequent updates. You want to minimize storage costs while maintaining historical data. Which approach is best?
+
+A. Use Z-ordering to reduce storage.  
+B. Implement an SCD Type 2 table with `start_date` and `end_date`.  
+C. Overwrite the table with each update.  
+D. Use schema inference to minimize storage.  
+E. Set `delta.retentionDuration = 1 day`.
+
+**Answer**: B  
+**Explanation**: SCD Type 2 tables maintain historical data by adding `start_date` and `end_date` columns, allowing efficient storage of historical records without duplicating unchanged data. Option A (Z-ordering) optimizes queries, not storage. Option C (overwrite) loses historical data. Option D (schema inference) doesn’t impact storage. Option E (short retention) deletes historical data, which is undesirable.
+
+---
+
+## Question 13
+You are designing a data model for a logistics company that requires frequent queries on a `location_id` column. How can you optimize query performance in Delta Lake?
+
+A. Use a CHECK constraint on `location_id`.  
+B. Partition the table by `location_id`.  
+C. Use schema inference for `location_id`.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `location_id` reduces data scanning for queries filtering on this column, improving performance. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates and doesn’t optimize queries.
+
+---
+
+## Question 14
+A Delta Lake table stores product inventory data. You need to enforce data quality rules to ensure `stock_quantity` is non-negative. Which approach is best?
+
+A. Use a UNIQUE constraint on `stock_quantity`.  
+B. Apply a CHECK constraint on `stock_quantity >= 0`.  
+C. Use a MERGE statement to validate `stock_quantity`.  
+D. Set `delta.enforceSchema = true`.  
+E. Use Z-ordering on `stock_quantity`.
+
+**Answer**: B  
+**Explanation**: A CHECK constraint (`stock_quantity >= 0`) enforces data quality by preventing negative values during inserts or updates. Option A (UNIQUE constraint) ensures uniqueness, not non-negativity. Option C (MERGE) can validate but doesn’t enforce on insert. Option D (`delta.enforceSchema`) ensures schema compliance, not specific rules. Option E (Z-ordering) optimizes queries, not data quality.
+
+---
+
+## Question 15
+You are implementing a data model for a streaming pipeline that processes clickstream data. The table must handle high write throughput and deduplicate records based on `user_id` and `event_time`. Which approach is most effective?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `user_id` and `event_time`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `user_id` and `event_time` efficiently deduplicates records in a streaming pipeline while handling high write throughput. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 16
+A Delta Lake table stores employee data with frequent updates to salaries. You need to implement an SCD Type 2 table to track salary history. Which columns are essential?
+
+A. `employee_id`, `salary`, `start_date`, `end_date`, `is_active`  
+B. `employee_id`, `salary`, `update_timestamp`  
+C. `employee_id`, `salary`, `version_id`  
+D. `employee_id`, `salary`, `checksum`  
+E. `employee_id`, `salary`, `partition_id`
+
+**Answer**: A  
+**Explanation**: SCD Type 2 tables require `start_date`, `end_date`, and `is_active` to track the validity period of each record, along with `employee_id` and `salary` for the core data. Option B lacks history-tracking columns. Option C (`version_id`) is not standard for SCD Type 2. Option D (`checksum`) is unrelated to history tracking. Option E (`partition_id`) is for partitioning, not history.
+
+---
+
+## Question 17
+You are designing a Delta Lake table for a global e-commerce platform. The table must support queries across multiple regions. How can you optimize query performance?
+
+A. Use a CHECK constraint on the `region` column.  
+B. Partition the table by `region`.  
+C. Use schema inference for the `region` column.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `region` reduces data scanning for region-specific queries, improving performance. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 18
+A Delta Lake table stores customer transactions with a nested JSON structure. How can you efficiently query specific fields within the JSON?
+
+A. Store the JSON as a string and parse it in queries.  
+B. Define a schema with nested structs for the JSON fields.  
+C. Use a CHECK constraint to validate JSON structure.  
+D. Set `delta.enforceSchema = false`.  
+E. Use Z-ordering on the JSON column.
+
+**Answer**: B  
+**Explanation**: Defining a schema with nested structs allows Delta Lake to store and query JSON fields efficiently using dot notation (e.g., `json_field.subfield`). Option A (string storage) requires expensive parsing. Option C (CHECK constraint) validates data, not query efficiency. Option D (`delta.enforceSchema = false`) risks schema mismatches. Option E (Z-ordering) doesn’t apply to JSON fields directly.
+
+---
+
+## Question 19
+You are designing a Delta Lake table for a streaming pipeline that processes log data. The table must handle late-arriving data and enforce uniqueness on `log_id`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `log_id`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `log_id` handles late-arriving data and ensures uniqueness by updating or inserting records. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 20
+A Delta Lake table stores product data with frequent updates to descriptions. You need to implement an SCD Type 1 table to maintain only the latest description. Which approach is most efficient?
+
+A. Use a MERGE statement to update or insert the latest description based on `product_id`.  
+B. Overwrite the table with each batch of product data.  
+C. Use a CHECK constraint to enforce the latest description.  
+D. Set `delta.overwriteSchema = true` for each update.  
+E. Use Z-ordering on `product_id` to maintain the latest description.
+
+**Answer**: A  
+**Explanation**: SCD Type 1 maintains only the latest record for each key (e.g., `product_id`). A MERGE statement efficiently updates or inserts the latest description. Option B (overwrite) is inefficient and loses historical data. Option C (CHECK constraint) doesn’t manage updates. Option D (`delta.overwriteSchema`) is for schema changes. Option E (Z-ordering) optimizes queries, not updates.
+
+---
+
+## Question 21
+You are designing a data model for a gaming platform using Delta Lake. The model must support frequent queries on `player_id` and `game_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `player_id` and `game_id`.  
+B. Partition the table by `player_id` and Z-order by `game_id`.  
+C. Use schema inference for both columns.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `player_id` reduces data scanning for player-specific queries, and Z-ordering by `game_id` optimizes range queries within partitions. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 22
+A Delta Lake table stores sales data with a `sale_date` column. You need to optimize queries filtering by date ranges. Which approach is best?
+
+A. Use a CHECK constraint on `sale_date`.  
+B. Partition the table by `sale_date`.  
+C. Use schema inference for `sale_date`.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `sale_date` (e.g., by year or month) reduces data scanning for date range queries, improving performance. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 23
+You are designing a Delta Lake table for a financial application that requires strict data quality for monetary amounts. How can you ensure `amount` is always positive?
+
+A. Use a UNIQUE constraint on `amount`.  
+B. Apply a CHECK constraint on `amount > 0`.  
+C. Use a MERGE statement to validate `amount`.  
+D. Set `delta.enforceSchema = true`.  
+E. Use Z-ordering on `amount`.
+
+**Answer**: B  
+**Explanation**: A CHECK constraint (`amount > 0`) enforces that monetary amounts are positive during inserts or updates. Option A (UNIQUE constraint) ensures uniqueness, not positivity. Option C (MERGE) can validate but doesn’t enforce on insert. Option D (`delta.enforceSchema`) ensures schema compliance, not specific rules. Option E (Z-ordering) optimizes queries, not data quality.
+
+---
+
+## Question 24
+A Delta Lake table stores order data with frequent updates. You need to implement an SCD Type 2 table to track order status history. Which columns are essential?
+
+A. `order_id`, `status`, `start_date`, `end_date`, `is_active`  
+B. `order_id`, `status`, `update_timestamp`  
+C. `order_id`, `status`, `version_id`  
+D. `order_id`, `status`, `checksum`  
+E. `order_id`, `status`, `partition_id`
+
+**Answer**: A  
+**Explanation**: SCD Type 2 tables require `start_date`, `end_date`, and `is_active` to track the validity of each record, along with `order_id` and `status` for the core data. Option B lacks history-tracking columns. Option C (`version_id`) is not standard for SCD Type 2. Option D (`checksum`) is unrelated to history tracking. Option E (`partition_id`) is for partitioning, not history.
+
+---
+
+## Question 25
+You are designing a Delta Lake table for a streaming pipeline that processes weather data. The table must handle late-arriving data and deduplicate records based on `station_id` and `timestamp`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `station_id` and `timestamp`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `station_id` and `timestamp` handles late-arriving data and deduplicates records efficiently. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 26
+A Delta Lake table stores customer data with a nested JSON structure. How can you efficiently manage schema evolution when new fields are added?
+
+A. Store the JSON as a string and parse it dynamically.  
+B. Enable `delta.schema.autoMerge = true`.  
+C. Use a CHECK constraint to validate new fields.  
+D. Set `delta.enforceSchema = false`.  
+E. Use Z-ordering on the JSON column.
+
+**Answer**: B  
+**Explanation**: Setting `delta.schema.autoMerge = true` allows Delta Lake to automatically merge new fields into the table schema during writes, supporting schema evolution. Option A (string storage) loses structured data benefits. Option C (CHECK constraint) validates data, not schema changes. Option D (`delta.enforceSchema = false`) risks schema mismatches. Option E (Z-ordering) doesn’t apply to schema evolution.
+
+---
+
+## Question 27
+You are designing a data model for a social media platform using Delta Lake. The model must support frequent queries on `user_id` and `post_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `user_id` and `post_id`.  
+B. Partition the table by `user_id` and Z-order by `post_id`.  
+C. Use schema inference for both columns.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `user_id` reduces data scanning for user-specific queries, and Z-ordering by `post_id` optimizes range queries within partitions. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 28
+A Delta Lake table stores transaction data with frequent updates. You need to implement an SCD Type 1 table to maintain only the latest transaction status. Which approach is most efficient?
+
+A. Use a MERGE statement to update or insert the latest status based on `transaction_id`.  
+B. Overwrite the table with each batch of transaction data.  
+C. Use a CHECK constraint to enforce the latest status.  
+D. Set `delta.overwriteSchema = true` for each update.  
+E. Use Z-ordering on `transaction_id` to maintain the latest status.
+
+**Answer**: A  
+**Explanation**: SCD Type 1 maintains only the latest record for each key (e.g., `transaction_id`). A MERGE statement efficiently updates or inserts the latest status. Option B (overwrite) is inefficient and loses historical data. Option C (CHECK constraint) doesn’t manage updates. Option D (`delta.overwriteSchema`) is for schema changes. Option E (Z-ordering) optimizes queries, not updates.
+
+---
+
+## Question 29
+You are designing a Delta Lake table for a streaming pipeline that processes event data. The table must handle high write throughput and deduplicate records based on `event_id`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `event_id`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `event_id` handles high write throughput and deduplicates records efficiently. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 30
+A Delta Lake table stores product data with frequent updates to categories. You need to implement an SCD Type 2 table to track category history. Which columns are essential?
+
+A. `product_id`, `category`, `start_date`, `end_date`, `is_active`  
+B. `product_id`, `category`, `update_timestamp`  
+C. `product_id`, `category`, `version_id`  
+D. `product_id`, `category`, `checksum`  
+E. `product_id`, `category`, `partition_id`
+
+**Answer**: A  
+**Explanation**: SCD Type 2 tables require `start_date`, `end_date`, and `is_active` to track the validity of each record, along with `product_id` and `category` for the core data. Option B lacks history-tracking columns. Option C (`version_id`) is not standard for SCD Type 2. Option D (`checksum`) is unrelated to history tracking. Option E (`partition_id`) is for partitioning, not history.
+
+---
+
+## Question 31
+You are designing a Delta Lake table for a logistics application with frequent queries on `shipment_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `shipment_id`.  
+B. Partition the table by `shipment_id`.  
+C. Use schema inference for `shipment_id`.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `shipment_id` reduces data scanning for shipment-specific queries, improving performance. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 32
+A Delta Lake table stores customer data with a `customer_id` column. You need to enforce uniqueness on this column. Which approach is best?
+
+A. Use a PRIMARY KEY constraint.  
+B. Apply a UNIQUE constraint on `customer_id`.  
+C. Use a MERGE statement to deduplicate records.  
+D. Set `delta.uniqueKeys = customer_id`.  
+E. Use Z-ordering on `customer_id`.
+
+**Answer**: B  
+**Explanation**: Delta Lake supports UNIQUE constraints to enforce uniqueness on `customer_id`. Option A (PRIMARY KEY) is not supported. Option C (MERGE) can deduplicate but doesn’t enforce uniqueness on insert. Option D (`delta.uniqueKeys`) is not valid. Option E (Z-ordering) optimizes queries, not uniqueness.
+
+---
+
+## Question 33
+You are designing a Delta Lake table for a streaming pipeline that processes financial transactions. The table must handle late-arriving data and deduplicate records based on `transaction_id`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `transaction_id`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `transaction_id` handles late-arriving data and deduplicates records efficiently. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 34
+A Delta Lake table stores employee data with frequent updates to departments. You need to implement an SCD Type 1 table to maintain only the latest department. Which approach is most efficient?
+
+A. Use a MERGE statement to update or insert the latest department based on `employee_id`.  
+B. Overwrite the table with each batch of employee data.  
+C. Use a CHECK constraint to enforce the latest department.  
+D. Set `delta.overwriteSchema = true` for each update.  
+E. Use Z-ordering on `employee_id` to maintain the latest department.
+
+**Answer**: A  
+**Explanation**: SCD Type 1 maintains only the latest record for each key (e.g., `employee_id`). A MERGE statement efficiently updates or inserts the latest department. Option B (overwrite) is inefficient and loses historical data. Option C (CHECK constraint) doesn’t manage updates. Option D (`delta.overwriteSchema`) is for schema changes. Option E (Z-ordering) optimizes queries, not updates.
+
+---
+
+## Question 35
+You are designing a data model for a retail application using Delta Lake. The model must support frequent queries on `store_id` and `product_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `store_id` and `product_id`.  
+B. Partition the table by `store_id` and Z-order by `product_id`.  
+C. Use schema inference for both columns.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `store_id` reduces data scanning for store-specific queries, and Z-ordering by `product_id` optimizes range queries within partitions. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 36
+A Delta Lake table stores sales data with a nested JSON structure. How can you efficiently query specific fields within the JSON?
+
+A. Store the JSON as a string and parse it in queries.  
+B. Define a schema with nested structs for the JSON fields.  
+C. Use a CHECK constraint to validate JSON structure.  
+D. Set `delta.enforceSchema = false`.  
+E. Use Z-ordering on the JSON column.
+
+**Answer**: B  
+**Explanation**: Defining a schema with nested structs allows Delta Lake to store and query JSON fields efficiently using dot notation. Option A (string storage) requires expensive parsing. Option C (CHECK constraint) validates data, not query efficiency. Option D (`delta.enforceSchema = false`) risks schema mismatches. Option E (Z-ordering) doesn’t apply to JSON fields directly.
+
+---
+
+## Question 37
+You are designing a Delta Lake table for a streaming pipeline that processes IoT sensor data. The thời gian phải xử lý dữ liệu đến muộn và loại bỏ các bản ghi trùng lặp dựa trên `sensor_id` và `timestamp`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `sensor_id` and `timestamp`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `sensor_id` and `timestamp` handles late-arriving data and deduplicates records efficiently. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 38
+A Delta Lake table stores customer data with frequent updates to addresses. You need to implement an SCD Type 2 table to track address history. Which columns are essential?
+
+A. `customer_id`, `address`, `start_date`, `end_date`, `is_active`  
+B. `customer_id`, `address`, `update_timestamp`  
+C. `customer_id`, `address`, `version_id`  
+D. `customer_id`, `address`, `checksum`  
+E. `customer_id`, `address`, `partition_id`
+
+**Answer**: A  
+**Explanation**: SCD Type 2 tables require `start_date`, `end_date`, and `is_active` to track the validity of each record, along with `customer_id` and `address` for the core data. Option B lacks history-tracking columns. Option C (`version_id`) is not standard for SCD Type 2. Option D (`checksum`) is unrelated to history tracking. Option E (`partition_id`) is for partitioning, not history.
+
+---
+
+## Question 39
+You are designing a Delta Lake table for a financial application with frequent queries on `account_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `account_id`.  
+B. Partition the table by `account_id`.  
+C. Use schema inference for `account_id`.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `account_id` reduces data scanning for account-specific queries, improving performance. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 40
+A Delta Lake table stores transaction data with a `transaction_id` column. You need to enforce uniqueness on this column. Which approach is best?
+
+A. Use a PRIMARY KEY constraint.  
+B. Apply a UNIQUE constraint on `transaction_id`.  
+C. Use a MERGE statement to deduplicate records.  
+D. Set `delta.uniqueKeys = transaction_id`.  
+E. Use Z-ordering on `transaction_id`.
+
+**Answer**: B  
+**Explanation**: Delta Lake supports UNIQUE constraints to enforce uniqueness on `transaction_id`. Option A (PRIMARY KEY) is not supported. Option C (MERGE) can deduplicate but doesn’t enforce uniqueness on insert. Option D (`delta.uniqueKeys`) is not valid. Option E (Z-ordering) optimizes queries, not uniqueness.
+
+---
+
+## Question 41
+You are designing a Delta Lake table for a streaming pipeline that processes log data. The table must handle high write throughput and deduplicate records based on `log_id`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `log_id`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `log_id` handles high write throughput and deduplicates records efficiently. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 42
+A Delta Lake table stores product data with frequent updates to prices. You need to implement an SCD Type 1 table to maintain only the latest price. Which approach is most efficient?
+
+A. Use a MERGE statement to update or insert the latest price based on `product_id`.  
+B. Overwrite the table with each batch of product data.  
+C. Use a CHECK constraint to enforce the latest price.  
+D. Set `delta.overwriteSchema = true` for each update.  
+E. Use Z-ordering on `product_id` to maintain the latest price.
+
+**Answer**: A  
+**Explanation**: SCD Type 1 maintains only the latest record for each key (e.g., `product_id`). A MERGE statement efficiently updates or inserts the latest price. Option B (overwrite) is inefficient and loses historical data. Option C (CHECK constraint) doesn’t manage updates. Option D (`delta.overwriteSchema`) is for schema changes. Option E (Z-ordering) optimizes queries, not updates.
+
+---
+
+## Question 43
+You are designing a data model for a healthcare application using Delta Lake. The model must support frequent queries on `patient_id` and `visit_date`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `patient_id` and `visit_date`.  
+B. Partition the table by `patient_id` and Z-order by `visit_date`.  
+C. Use schema inference for both columns.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `patient_id` reduces data scanning for patient-specific queries, and Z-ordering by `visit_date` optimizes range queries within partitions. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 44
+A Delta Lake table stores sales data with a `sale_date` column. You need to enforce data quality rules to ensure `sale_date` is not null. Which approach is best?
+
+A. Use a UNIQUE constraint on `sale_date`.  
+B. Apply a CHECK constraint on `sale_date IS NOT NULL`.  
+C. Use a MERGE statement to validate `sale_date`.  
+D. Set `delta.enforceSchema = true`.  
+E. Use Z-ordering on `sale_date`.
+
+**Answer**: B  
+**Explanation**: A CHECK constraint (`sale_date IS NOT NULL`) enforces that the `sale_date` column is not null during inserts or updates. Option A (UNIQUE constraint) ensures uniqueness, not non-nullability. Option C (MERGE) can validate but doesn’t enforce on insert. Option D (`delta.enforceSchema`) ensures schema compliance, not specific rules. Option E (Z-ordering) optimizes queries, not data quality.
+
+---
+
+## Question 45
+You are designing a Delta Lake table for a streaming pipeline that processes event data. The table must handle late-arriving data and deduplicate records based on `event_id` and `timestamp`. Which approach is best?
+
+A. Use a full outer join to deduplicate data.  
+B. Perform a MERGE with a matching condition on `event_id` and `timestamp`.  
+C. Set `delta.deduplicate = true`.  
+D. Use a CHECK constraint to reject duplicates.  
+E. Overwrite the table with each batch.
+
+**Answer**: B  
+**Explanation**: A MERGE statement with a matching condition on `event_id` and `timestamp` handles late-arriving data and deduplicates records efficiently. Option A (full outer join) is inefficient for streaming. Option C (`delta.deduplicate`) is not valid. Option D (CHECK constraint) cannot deduplicate across records. Option E (overwrite) is unsuitable for streaming.
+
+---
+
+## Question 46
+A Delta Lake table stores customer data with frequent updates to contact information. You need to implement an SCD Type 2 table to track contact history. Which columns are essential?
+
+A. `customer_id`, `contact_info`, `start_date`, `end_date`, `is_active`  
+B. `customer_id`, `contact_info`, `update_timestamp`  
+C. `customer_id`, `contact_info`, `version_id`  
+D. `customer_id`, `contact_info`, `checksum`  
+E. `customer_id`, `contact_info`, `partition_id`
+
+**Answer**: A  
+**Explanation**: SCD Type 2 tables require `start_date`, `end_date`, and `is_active` to track the validity of each record, along with `customer_id` and `contact_info` for the core data. Option B lacks history-tracking columns. Option C (`version_id`) is not standard for SCD Type 2. Option D (`checksum`) is unrelated to history tracking. Option E (`partition_id`) is for partitioning, not history.
+
+---
+
+## Question 47
+You are designing a Delta Lake table for a logistics application with frequent queries on `route_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `route_id`.  
+B. Partition the table by `route_id`.  
+C. Use schema inference for `route_id`.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `route_id` reduces data scanning for route-specific queries, improving performance. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 48
+A Delta Lake table stores transaction data with a nested JSON structure. How can you efficiently manage schema evolution when new fields are added?
+
+A. Store the JSON as a string and parse it dynamically.  
+B. Enable `delta.schema.autoMerge = true`.  
+C. Use a CHECK constraint to validate new fields.  
+D. Set `delta.enforceSchema = false`.  
+E. Use Z-ordering on the JSON column.
+
+**Answer**: B  
+**Explanation**: Setting `delta.schema.autoMerge = true` allows Delta Lake to automatically merge new fields into the table schema during writes, supporting schema evolution. Option A (string storage) loses structured data benefits. Option C (CHECK constraint) validates data, not schema changes. Option D (`delta.enforceSchema = false`) risks schema mismatches. Option E (Z-ordering) doesn’t apply to schema evolution.
+
+---
+
+## Question 49
+You are designing a data model for a gaming platform using Delta Lake. The model must support frequent queries on `game_id` and `player_id`. How can you optimize query performance?
+
+A. Use a CHECK constraint on `game_id` and `player_id`.  
+B. Partition the table by `game_id` and Z-order by `player_id`.  
+C. Use schema inference for both columns.  
+D. Set `delta.deduplicate = true`.  
+E. Overwrite the table daily.
+
+**Answer**: B  
+**Explanation**: Partitioning by `game_id` reduces data scanning for game-specific queries, and Z-ordering by `player_id` optimizes range queries within partitions. Option A (CHECK constraint) enforces data quality, not query speed. Option C (schema inference) doesn’t optimize queries. Option D (`delta.deduplicate`) is not valid. Option E (overwrite) disrupts incremental updates.
+
+---
+
+## Question 50
+A Delta Lake table stores sales data with frequent updates to quantities. You need to implement an SCD Type 1 table to maintain only the latest quantity. Which approach is most efficient?
+
+A. Use a MERGE statement to update or insert the latest quantity based on `sale_id`.  
+B. Overwrite the table with each batch of sales data.  
+C. Use a CHECK constraint to enforce the latest quantity.  
+D. Set `delta.overwriteSchema = true` for each update.  
+E. Use Z-ordering on `sale_id` to maintain the latest quantity.
+
+**Answer**: A  
+**Explanation**: SCD Type 1 maintains only the latest record for each key (e.g., `sale_id`). A MERGE statement efficiently updates or inserts the latest quantity. Option B (overwrite) is inefficient and loses historical data. Option C (CHECK constraint) doesn’t manage updates. Option D (`delta.overwriteSchema`) is for schema changes. Option E (Z-ordering) optimizes queries, not updates.
+
+---
+
+These questions cover key aspects of the **Data Modeling** module, including Delta Lake constraints, SCD implementations, schema evolution, partitioning, Z-ordering, and deduplication in streaming pipelines. Practice these scenarios to build confidence for the Databricks Certified Data Engineer Professional exam.
